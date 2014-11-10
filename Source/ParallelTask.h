@@ -164,10 +164,10 @@ public:
 public:
 
 	wchar_t              mFileName[MAX_PATH];
-	int                  mCodeLine;
-	int                  mCommentline;
-	int                  mBlankLine;
-	int                  mTotalLine;
+	int                  mCodeLines;
+	int                  mCodeCommentLines;
+	int                  mCommentLines;
+	int                  mBlankLines;
 
 private:
 

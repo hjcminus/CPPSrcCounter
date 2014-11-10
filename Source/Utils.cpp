@@ -147,20 +147,17 @@ c/c++ source
 ================================================================================
 */
 
-static const wchar_t * SkipWhiteChar(const wchar_t * pc)
+static int IsBlankChar(wchar_t c)
 {
-	while (*pc == L' ' || *pc == L'\t' || *pc == L'\r')
-	{
-		pc++;
-	}
-	return pc;
+	return c == L' ' || c == L'\t' || c == L'\r';
 }
 
 void GetSrcFileStatistic(const wchar_t * Buffer, SrcFileStatistic &Statistic)
 {
-	int TotalLine = 0;
-	int CommentLine = 0;
-	int BlankLine = 0;
+	int CodeLines = 0;
+	int CodeCommentLines = 0;
+	int CommentLines = 0;
+	int BlankLines = 0;
 
 	const wchar_t * PC = Buffer;
 
@@ -171,12 +168,9 @@ void GetSrcFileStatistic(const wchar_t * Buffer, SrcFileStatistic &Statistic)
 	{
 		//new line start
 		const wchar_t * LineStart = PC;
-		PC = SkipWhiteChar(PC);
 
-		if (S_CODE == State && (*PC == L'\n'))
-		{
-			BlankLine++;
-		}
+		int HasCode = 0;
+		int HasComment = 0;
 
 		while (*PC && *PC != L'\n')
 		{
@@ -185,12 +179,19 @@ void GetSrcFileStatistic(const wchar_t * Buffer, SrcFileStatistic &Statistic)
 				if (*PC == L'/' && *(PC + 1) == L'*')
 				{
 					State = S_BLOCKCOMMENT;
+					HasComment = 1;
 					PC += 2;
 				}
 				else if (*PC == L'/' && *(PC + 1) == L'/')
 				{
 					State = S_LINECOMMENT;
+					HasComment = 1;
 					PC += 2;
+				}
+				else if (!IsBlankChar(*PC))
+				{
+					HasCode = 1;
+					PC++;
 				}
 				else
 				{
@@ -201,14 +202,14 @@ void GetSrcFileStatistic(const wchar_t * Buffer, SrcFileStatistic &Statistic)
 			{
 				if (*PC == L'*' && *(PC + 1) == L'/')
 				{
-					State = S_CODE; //back to code mode
+					State = S_CODE;
+					HasComment = 1;
 					PC += 2;
-
-					PC = SkipWhiteChar(PC);
-					if (*PC == L'\n')
-					{
-						CommentLine++; //no valid character
-					}
+				}
+				else if (!IsBlankChar(*PC))
+				{
+					HasComment = 1;
+					PC++;
 				}
 				else
 				{
@@ -224,15 +225,25 @@ void GetSrcFileStatistic(const wchar_t * Buffer, SrcFileStatistic &Statistic)
 		//line end
 		if (*PC == L'\n')
 		{
-			TotalLine++;
-
-			if (S_BLOCKCOMMENT == State)
+			if (HasComment && HasCode)
 			{
-				CommentLine++;
+				CodeCommentLines++;
 			}
-			else if (S_LINECOMMENT == State)
+			else if (HasComment)
 			{
-				CommentLine++;
+				CommentLines++;
+			}
+			else if (HasCode)
+			{
+				CodeLines++;
+			}
+			else
+			{
+				BlankLines++;
+			}
+
+			if (S_LINECOMMENT == State)
+			{
 				State = S_CODE;
 			}
 
@@ -241,24 +252,10 @@ void GetSrcFileStatistic(const wchar_t * Buffer, SrcFileStatistic &Statistic)
 
 	}
 
-	if (S_CODE == State)
-	{
-		BlankLine++;
-	}
-	else if (S_BLOCKCOMMENT == State)
-	{
-		CommentLine++;
-	}
-	else if (S_LINECOMMENT == State)
-	{
-		CommentLine++;
-		State = S_CODE;
-	}
-
-	Statistic.CodeLine = TotalLine - CommentLine - BlankLine;
-	Statistic.CommentLine = CommentLine;
-	Statistic.BlankLine = BlankLine;
-	Statistic.TotalLine = TotalLine;
+	Statistic.CodeLines = CodeLines;
+	Statistic.CodeCommentLines = CodeCommentLines;
+	Statistic.CommentLines = CommentLines;
+	Statistic.BlankLines = BlankLines;
 }
 
 /*

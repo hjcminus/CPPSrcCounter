@@ -63,10 +63,10 @@ private:
 	int             m_nFileCount;
 	int             m_nFinishedCount;
 
-	int             m_nSumCode;
-	int             m_nSumComment;
-	int             m_nSumBlank;
-	int             m_nSumTotal;
+	int             m_nSumCodeLines;
+	int             m_nSumCodeCommentLines;
+	int             m_nSumCommentLines;
+	int             m_nSumBlankLines;
 
 	int             m_nCountPass;
 
@@ -75,7 +75,7 @@ private:
 	void            InitParallelSystem();
 	void            ShutdownParallelSystem();
 
-	void            UpdateStatistic(int Code, int Comment, int Blank, int Total);
+	void            UpdateStatistic(int CodeLines, int CodeCommentLines, int CommentLines, int BlankLines);
 
 	DECLARE_MESSAGE_MAP()
 

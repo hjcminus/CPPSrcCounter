@@ -243,10 +243,10 @@ void SrcCountTask::Execute()
 
 	SrcCountResult * Result = SrcCountResult::Create(mFileName);
 
-	Result->mCodeLine = Statistic.CodeLine;
-	Result->mCommentline = Statistic.CommentLine;
-	Result->mBlankLine = Statistic.BlankLine;
-	Result->mTotalLine = Statistic.TotalLine;
+	Result->mCodeLines = Statistic.CodeLines;
+	Result->mCodeCommentLines = Statistic.CodeCommentLines;
+	Result->mCommentLines = Statistic.CommentLines;
+	Result->mBlankLines = Statistic.BlankLines;
 
 	GetMainDialog()->NotifyResult(Result);
 }
@@ -299,7 +299,7 @@ SrcCountResult * SrcCountResult::Create(const wchar_t *filename)
 	return new (buffer)SrcCountResult(filename);
 }
 
-SrcCountResult::SrcCountResult(const wchar_t *filename) :mCodeLine(0), mCommentline(0), mBlankLine(0), mTotalLine(0)
+SrcCountResult::SrcCountResult(const wchar_t *filename) :mCodeLines(0), mCodeCommentLines(0), mCommentLines(0), mBlankLines(0)
 {
 	mChain.InitOwner(this);
 	wcscpy_s(mFileName, filename);
@@ -318,7 +318,7 @@ void SrcCountResult::Free()
 
 void SrcCountResult::Execute()
 {
-	GetMainDialog()->InsertRecord(mFileName, mCodeLine, mCommentline, mBlankLine, mTotalLine);
+	GetMainDialog()->InsertRecord(mFileName, mCodeLines, mCodeCommentLines, mCommentLines, mBlankLines);
 }
 
 void FreeMemory()

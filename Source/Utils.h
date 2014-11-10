@@ -45,10 +45,10 @@ c/c++ source
 
 struct SrcFileStatistic
 {
-	int CodeLine;
-	int CommentLine;
-	int BlankLine;
-	int TotalLine;
+	int CodeLines;
+	int CodeCommentLines;
+	int CommentLines;
+	int BlankLines;
 };
 
 void GetSrcFileStatistic(const wchar_t * Buffer, SrcFileStatistic &Statistic);

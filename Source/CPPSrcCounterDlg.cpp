@@ -45,7 +45,7 @@ END_MESSAGE_MAP()
 CCPPSrcCounterDlg::CCPPSrcCounterDlg(CWnd* pParent /*=NULL*/)
 : CBCGPDialog(CCPPSrcCounterDlg::IDD, pParent), mResultChain(nullptr), m_nCountPass(0)
 {
-	m_nFileCount = m_nSumCode = m_nSumComment = m_nSumBlank = m_nSumTotal = 0;
+	m_nFileCount = m_nSumCodeLines = m_nSumCodeCommentLines = m_nSumCommentLines = m_nSumBlankLines = 0;
 
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
@@ -92,7 +92,6 @@ const int DLG_CY = 540;
 BOOL CCPPSrcCounterDlg::OnInitDialog()
 {
 	CBCGPDialog::OnInitDialog();
-	EnableVisualManagerStyle(TRUE, TRUE);
 
 	int nScreenCX = GetSystemMetrics(SM_CXSCREEN);
 	int nScreenCY = GetSystemMetrics(SM_CYSCREEN);
@@ -167,11 +166,12 @@ BOOL CCPPSrcCounterDlg::OnInitDialog()
 	m_wndStatisitc.SendMessage(LVM_SETEXTENDEDLISTVIEWSTYLE, 0,
 		LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 
-	m_wndStatisitc.InsertColumn(0, _T("File"), LVCFMT_LEFT, 550);
-	m_wndStatisitc.InsertColumn(1, _T("Code"), LVCFMT_LEFT, 75);
-	m_wndStatisitc.InsertColumn(2, _T("Comment"), LVCFMT_LEFT, 75);
-	m_wndStatisitc.InsertColumn(3, _T("Blank"), LVCFMT_LEFT, 75);
-	m_wndStatisitc.InsertColumn(4, _T("Total"), LVCFMT_LEFT, 75);
+	m_wndStatisitc.InsertColumn(0, _T("File"), LVCFMT_LEFT, 400);
+	m_wndStatisitc.InsertColumn(1, _T("Code lines"), LVCFMT_LEFT, 75);
+	m_wndStatisitc.InsertColumn(2, _T("Code/Comment lines"), LVCFMT_LEFT, 125);
+	m_wndStatisitc.InsertColumn(3, _T("Comment lines"), LVCFMT_LEFT, 90);
+	m_wndStatisitc.InsertColumn(4, _T("Blank lines"), LVCFMT_LEFT, 80);
+	m_wndStatisitc.InsertColumn(5, _T("Total lines"), LVCFMT_LEFT, 80);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -289,8 +289,7 @@ void CCPPSrcCounterDlg::OnBnClickedButtonCount()
 	InitParallelSystem();
 
 	m_nCountPass++;
-
-	m_nSumCode = m_nSumComment = m_nSumBlank = m_nSumTotal = 0;
+	m_nSumCodeLines = m_nSumCodeCommentLines = m_nSumCommentLines = m_nSumBlankLines = 0;
 
 	const wchar_t * FileName = fileList.GetFirst();
 	if (FileName)
@@ -362,16 +361,16 @@ void CCPPSrcCounterDlg::ShutdownParallelSystem()
 	}
 }
 
-void CCPPSrcCounterDlg::UpdateStatistic(int Code, int Comment, int Blank, int Total)
+void CCPPSrcCounterDlg::UpdateStatistic(int CodeLines, int CodeCommentLines, int CommentLines, int BlankLines)
 {
 	m_nFinishedCount++;
 
 	m_wndProgress.SetPos(m_nFinishedCount * 100 / m_nFileCount);
 
-	m_nSumCode += Code;
-	m_nSumComment += Comment;
-	m_nSumBlank += Blank;
-	m_nSumTotal += Total;
+	m_nSumCodeLines += CodeLines;
+	m_nSumCodeCommentLines += CodeCommentLines;
+	m_nSumCommentLines += CommentLines;
+	m_nSumBlankLines += BlankLines;
 
 	if (m_nFinishedCount == m_nFileCount)
 	{
@@ -384,17 +383,21 @@ void CCPPSrcCounterDlg::UpdateStatistic(int Code, int Comment, int Blank, int To
 		int nIdx = m_wndStatisitc.GetItemCount();
 		m_wndStatisitc.InsertItem(nIdx, buffer);
 
-		swprintf_s(buffer, L"%d", m_nSumCode);
+		swprintf_s(buffer, L"%d", m_nSumCodeLines);
 		m_wndStatisitc.SetItemText(nIdx, 1, buffer);
 
-		swprintf_s(buffer, L"%d", m_nSumComment);
+		swprintf_s(buffer, L"%d", m_nSumCodeCommentLines);
 		m_wndStatisitc.SetItemText(nIdx, 2, buffer);
 
-		swprintf_s(buffer, L"%d", m_nSumBlank);
+		swprintf_s(buffer, L"%d", m_nSumCommentLines);
 		m_wndStatisitc.SetItemText(nIdx, 3, buffer);
 
-		swprintf_s(buffer, L"%d", m_nSumTotal);
+		swprintf_s(buffer, L"%d", m_nSumBlankLines);
 		m_wndStatisitc.SetItemText(nIdx, 4, buffer);
+
+		swprintf_s(buffer, L"%d", m_nSumCodeLines + m_nSumCodeCommentLines + m_nSumCommentLines + m_nSumBlankLines);
+		m_wndStatisitc.SetItemText(nIdx, 5, buffer);
+
 	}
 }
 
@@ -409,25 +412,28 @@ void CCPPSrcCounterDlg::NotifyResult(ParallelTask *Result)
 	PostMessage(WM_PARALLEL_RESULT, m_nCountPass, 0);
 }
 
-void CCPPSrcCounterDlg::InsertRecord(LPCTSTR lpszFileName, int Code, int Comment, int Blank, int Total)
+void CCPPSrcCounterDlg::InsertRecord(LPCTSTR lpszFileName, int CodeLines, int CodeCommentLines, int CommentLines, int BlankLines)
 {
 	wchar_t buffer[64];
 	int nIdx = m_wndStatisitc.GetItemCount();
 	m_wndStatisitc.InsertItem(nIdx, lpszFileName);
 
-	swprintf_s(buffer, L"%d", Code);
+	swprintf_s(buffer, L"%d", CodeLines);
 	m_wndStatisitc.SetItemText(nIdx, 1, buffer);
 
-	swprintf_s(buffer, L"%d", Comment);
+	swprintf_s(buffer, L"%d", CodeCommentLines);
 	m_wndStatisitc.SetItemText(nIdx, 2, buffer);
 
-	swprintf_s(buffer, L"%d", Blank);
+	swprintf_s(buffer, L"%d", CommentLines);
 	m_wndStatisitc.SetItemText(nIdx, 3, buffer);
 
-	swprintf_s(buffer, L"%d", Total);
+	swprintf_s(buffer, L"%d", BlankLines);
 	m_wndStatisitc.SetItemText(nIdx, 4, buffer);
 
-	UpdateStatistic(Code, Comment, Blank, Total);
+	swprintf_s(buffer, L"%d", CodeLines + CodeCommentLines + CommentLines + BlankLines);
+	m_wndStatisitc.SetItemText(nIdx, 5, buffer);
+
+	UpdateStatistic(CodeLines, CodeCommentLines, CommentLines, BlankLines);
 }
 
 void CCPPSrcCounterDlg::InsertError(LPCTSTR lpszFileName)
