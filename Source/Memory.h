@@ -42,6 +42,8 @@ private:
 	str_s *         mFirst;
 	str_s *         mLast;
 	str_s *         mNext;
+
+	void            UpdateLinkChain(char * pNewData, char * pOldData);
 };
 
 /*
