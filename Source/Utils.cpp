@@ -97,30 +97,65 @@ BOOL ReadAnsiText(const wchar_t * FileName, char * &Data, int &Len)
 	Data = nullptr;
 	Len = 0;
 
-	if (GetFileType(FileName) != FT_ANSI)
-	{
-		printf("could not detect file type\n");
+	FileType ft = GetFileType(FileName);
+
+	if (FT_ANSI == ft) {
+		FILE * f = 0;
+		_wfopen_s(&f, FileName, L"rb");
+		if (!f)
+		{
+			printf("could not open file %s\n", FileName);
+			return FALSE;
+		}
+
+		int Size = FileSize(f);
+
+		Len = Size + 1;
+		Data = new char[Len];
+
+		fread(Data, 1, Size, f);
+		Data[Size] = 0;
+		fclose(f);
+
+		return TRUE;
+	}
+	else if (FT_UNICODE_LE == ft) {
+		FILE * f = 0;
+		_wfopen_s(&f, FileName, L"rb");
+		if (!f)
+		{
+			printf("could not open file %s\n", FileName);
+			return FALSE;
+		}
+
+		int Size = FileSize(f);
+		if (0 == Size % 2) {
+			wchar_t * buffer = new wchar_t[Size / 2 + 1];
+			fread(buffer, 2, Size / 2, f);
+			buffer[Size / 2] = 0;
+
+			Len = Size + 1;
+			Data = new char[Len];
+
+			int translen = WideCharToMultiByte(CP_ACP, 0, buffer + 1, Size / 2 - 1, Data, Len, nullptr, nullptr);
+			Data[translen] = 0;
+		
+			delete[] buffer;
+
+			fclose(f);
+
+			return TRUE;
+		}
+		else {
+			fclose(f);
+			printf("bad file size\n");
+			return FALSE;
+		}		
+	}
+	else {
+		printf("unsupported file type\n");
 		return FALSE;
 	}
-
-	FILE * f = 0;
-	_wfopen_s(&f, FileName, L"rb");
-	if (!f)
-	{
-		printf("could not open file %s\n", FileName);
-		return FALSE;
-	}
-
-	int Size = FileSize(f);
-
-	Len = Size + 1;
-	Data = new char[Len];
-
-	fread(Data, 1, Size, f);
-	Data[Size] = 0;
-	fclose(f);
-
-	return TRUE;
 }
 
 /*
@@ -327,7 +362,7 @@ void SrcFileList::RecursiveInit(const wchar_t *dir)
 			else
 			{
 				const wchar_t * ext = ExtractExt(fd.cFileName);
-				if (ext && (!wcscmp(ext, L"h") || !wcscmp(ext, L"hpp") || !wcscmp(ext, L"c") || !wcscmp(ext, L"cpp")))
+				if (ext && (!_wcsicmp(ext, L"h") || !_wcsicmp(ext, L"hpp") || !_wcsicmp(ext, L"c") || !_wcsicmp(ext, L"cpp") || !_wcsicmp(ext, L"inl")))
 				{
 					mFileList.AddString(fullpath);
 				}

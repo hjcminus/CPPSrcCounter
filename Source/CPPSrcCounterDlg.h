@@ -76,6 +76,7 @@ private:
 	void            ShutdownParallelSystem();
 
 	void            UpdateStatistic(int CodeLines, int CodeCommentLines, int CommentLines, int BlankLines);
+	void            TryAppendPathToCombo(LPCTSTR lpszPath);
 
 	DECLARE_MESSAGE_MAP()
 

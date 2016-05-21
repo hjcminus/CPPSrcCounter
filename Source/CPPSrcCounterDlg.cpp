@@ -67,7 +67,8 @@ void CCPPSrcCounterDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_PROGRESS, m_wndProgress);
 }
 
-#define WM_PARALLEL_RESULT WM_USER + 1
+#define WM_PARALLEL_RESULT (WM_USER + 1)
+#define MAX_FILE_PATH_COUNT  1024
 
 BEGIN_MESSAGE_MAP(CCPPSrcCounterDlg, CBCGPDialog)
 	ON_WM_SYSCOMMAND()
@@ -169,9 +170,45 @@ BOOL CCPPSrcCounterDlg::OnInitDialog()
 	m_wndStatisitc.InsertColumn(0, _T("File"), LVCFMT_LEFT, 400);
 	m_wndStatisitc.InsertColumn(1, _T("Code lines"), LVCFMT_LEFT, 75);
 	m_wndStatisitc.InsertColumn(2, _T("Code/Comment lines"), LVCFMT_LEFT, 125);
-	m_wndStatisitc.InsertColumn(3, _T("Comment lines"), LVCFMT_LEFT, 90);
-	m_wndStatisitc.InsertColumn(4, _T("Blank lines"), LVCFMT_LEFT, 80);
-	m_wndStatisitc.InsertColumn(5, _T("Total lines"), LVCFMT_LEFT, 80);
+	m_wndStatisitc.InsertColumn(3, _T("Valid Code lines"), LVCFMT_LEFT, 125);
+	m_wndStatisitc.InsertColumn(4, _T("Comment lines"), LVCFMT_LEFT, 90);
+	m_wndStatisitc.InsertColumn(5, _T("Blank lines"), LVCFMT_LEFT, 80);
+	m_wndStatisitc.InsertColumn(6, _T("Total lines"), LVCFMT_LEFT, 80);
+
+	//2015-08-17 Mon. added
+	HKEY hKey = NULL;
+	if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\CPPSrcCounter"), 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+		wchar_t buffer[MAX_PATH * MAX_FILE_PATH_COUNT];
+		DWORD len = sizeof(buffer);
+		if (RegQueryValueEx(hKey, _T("Path"), NULL, NULL, (LPBYTE)buffer, &len) == ERROR_SUCCESS) {
+			int wideLen = len >> 1;
+			buffer[wideLen] = 0;
+			wchar_t * pc = buffer;
+			wchar_t * s = pc;
+			while (*pc) {
+				if (*pc == _T(';')) {
+					*pc = 0;
+					TryAppendPathToCombo(s);
+					++pc;
+					if (!*pc) {
+						break;
+					}
+					else {
+						s = pc;
+					}
+				}
+				else {
+					++pc;
+				}
+			}
+
+			if (wcslen(s) > 0) {
+				TryAppendPathToCombo(s);
+			}
+
+		}
+		RegCloseKey(hKey);
+	}
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -239,6 +276,30 @@ void CCPPSrcCounterDlg::OnClose()
 {
 	ShutdownParallelSystem();
 
+	//2015-08-17 Mon. added. store path
+	HKEY hKey = NULL;
+	if (RegCreateKey(HKEY_CURRENT_USER, _T("SOFTWARE\\CPPSrcCounter"), &hKey) == ERROR_SUCCESS) {
+		wchar_t buffer[MAX_PATH * MAX_FILE_PATH_COUNT];
+		buffer[0] = 0;
+		CString strText;
+		for (int i = 0; i < m_cmbFolder.GetCount(); ++i) {
+			m_cmbFolder.GetLBText(i, strText);
+			if (i > 0) {
+				wcscat_s(buffer, _T(";"));
+			}
+			wcscat_s(buffer, strText);
+		}
+		m_cmbFolder.GetWindowText(strText);
+		if (m_cmbFolder.GetCount() > 0) {
+			wcscat_s(buffer, _T(";"));
+		}
+		wcscat_s(buffer, strText);
+
+		DWORD bytes = (DWORD)wcslen(buffer) * 2;
+		RegSetValueEx(hKey, _T("Path"), 0, REG_SZ, (const BYTE *)buffer, bytes);
+		RegCloseKey(hKey);
+	}
+
 	FreeMemory(); //force free
 
 	CBCGPDialog::OnClose();
@@ -248,6 +309,7 @@ void CCPPSrcCounterDlg::OnClose()
 void CCPPSrcCounterDlg::OnBnClickedButtonSelect()
 {
 	CString strSelectedFolder;
+	m_cmbFolder.GetWindowText(strSelectedFolder);
 	if (theApp.GetShellManager()->BrowseForFolder(
 		strSelectedFolder, this, strSelectedFolder))
 	{
@@ -268,6 +330,7 @@ void CCPPSrcCounterDlg::OnBnClickedButtonCount()
 	{
 		return;
 	}
+	TryAppendPathToCombo(strSelectedFolder);
 
 	SrcFileList fileList;
 	fileList.Init(strSelectedFolder);
@@ -389,15 +452,24 @@ void CCPPSrcCounterDlg::UpdateStatistic(int CodeLines, int CodeCommentLines, int
 		swprintf_s(buffer, L"%d", m_nSumCodeCommentLines);
 		m_wndStatisitc.SetItemText(nIdx, 2, buffer);
 
-		swprintf_s(buffer, L"%d", m_nSumCommentLines);
+		swprintf_s(buffer, L"%d", m_nSumCodeLines + m_nSumCodeCommentLines);
 		m_wndStatisitc.SetItemText(nIdx, 3, buffer);
 
-		swprintf_s(buffer, L"%d", m_nSumBlankLines);
+		swprintf_s(buffer, L"%d", m_nSumCommentLines);
 		m_wndStatisitc.SetItemText(nIdx, 4, buffer);
 
-		swprintf_s(buffer, L"%d", m_nSumCodeLines + m_nSumCodeCommentLines + m_nSumCommentLines + m_nSumBlankLines);
+		swprintf_s(buffer, L"%d", m_nSumBlankLines);
 		m_wndStatisitc.SetItemText(nIdx, 5, buffer);
 
+		swprintf_s(buffer, L"%d", m_nSumCodeLines + m_nSumCodeCommentLines + m_nSumCommentLines + m_nSumBlankLines);
+		m_wndStatisitc.SetItemText(nIdx, 6, buffer);
+
+	}
+}
+
+void CCPPSrcCounterDlg::TryAppendPathToCombo(LPCTSTR lpszPath) {
+	if (m_cmbFolder.FindString(-1, lpszPath) == -1 && m_cmbFolder.GetCount() < MAX_FILE_PATH_COUNT) {
+		m_cmbFolder.AddString(lpszPath);
 	}
 }
 
@@ -424,14 +496,17 @@ void CCPPSrcCounterDlg::InsertRecord(LPCTSTR lpszFileName, int CodeLines, int Co
 	swprintf_s(buffer, L"%d", CodeCommentLines);
 	m_wndStatisitc.SetItemText(nIdx, 2, buffer);
 
-	swprintf_s(buffer, L"%d", CommentLines);
+	swprintf_s(buffer, L"%d", CodeLines + CodeCommentLines);
 	m_wndStatisitc.SetItemText(nIdx, 3, buffer);
 
-	swprintf_s(buffer, L"%d", BlankLines);
+	swprintf_s(buffer, L"%d", CommentLines);
 	m_wndStatisitc.SetItemText(nIdx, 4, buffer);
 
-	swprintf_s(buffer, L"%d", CodeLines + CodeCommentLines + CommentLines + BlankLines);
+	swprintf_s(buffer, L"%d", BlankLines);
 	m_wndStatisitc.SetItemText(nIdx, 5, buffer);
+
+	swprintf_s(buffer, L"%d", CodeLines + CodeCommentLines + CommentLines + BlankLines);
+	m_wndStatisitc.SetItemText(nIdx, 6, buffer);
 
 	UpdateStatistic(CodeLines, CodeCommentLines, CommentLines, BlankLines);
 }
