@@ -196,93 +196,117 @@ void GetSrcFileStatistic(const wchar_t * Buffer, SrcFileStatistic &Statistic)
 
 	const wchar_t * PC = Buffer;
 
-	enum { S_CODE, S_LINECOMMENT, S_BLOCKCOMMENT } State;
-	State = S_CODE;
+	if (*PC) {
 
-	while (*PC)
-	{
-		//new line start
-		const wchar_t * LineStart = PC;
+		enum { S_CODE, S_LINECOMMENT, S_BLOCKCOMMENT } State;
+		State = S_CODE;
 
 		int HasCode = 0;
 		int HasComment = 0;
 
-		while (*PC && *PC != L'\n')
+		while (*PC)
 		{
-			if (S_CODE == State)
+			//new line start
+			const wchar_t * LineStart = PC;
+
+			HasCode = 0;
+			HasComment = 0;
+
+			while (*PC && *PC != L'\n')
 			{
-				if (*PC == L'/' && *(PC + 1) == L'*')
+				if (S_CODE == State)
 				{
-					State = S_BLOCKCOMMENT;
-					HasComment = 1;
-					PC += 2;
+					if (*PC == L'/' && *(PC + 1) == L'*')
+					{
+						State = S_BLOCKCOMMENT;
+						HasComment = 1;
+						PC += 2;
+					}
+					else if (*PC == L'/' && *(PC + 1) == L'/')
+					{
+						State = S_LINECOMMENT;
+						HasComment = 1;
+						PC += 2;
+					}
+					else if (!IsBlankChar(*PC))
+					{
+						HasCode = 1;
+						PC++;
+					}
+					else
+					{
+						PC++;
+					}
 				}
-				else if (*PC == L'/' && *(PC + 1) == L'/')
+				else if (S_BLOCKCOMMENT == State)
 				{
-					State = S_LINECOMMENT;
-					HasComment = 1;
-					PC += 2;
-				}
-				else if (!IsBlankChar(*PC))
-				{
-					HasCode = 1;
-					PC++;
+					if (*PC == L'*' && *(PC + 1) == L'/')
+					{
+						State = S_CODE;
+						HasComment = 1;
+						PC += 2;
+					}
+					else if (!IsBlankChar(*PC))
+					{
+						HasComment = 1;
+						PC++;
+					}
+					else
+					{
+						PC++;
+					}
 				}
 				else
 				{
 					PC++;
 				}
 			}
-			else if (S_BLOCKCOMMENT == State)
+
+			//line end
+			if (*PC == L'\n')
 			{
-				if (*PC == L'*' && *(PC + 1) == L'/')
+				if (HasComment && HasCode)
+				{
+					CodeCommentLines++;
+				}
+				else if (HasComment)
+				{
+					CommentLines++;
+				}
+				else if (HasCode)
+				{
+					CodeLines++;
+				}
+				else
+				{
+					BlankLines++;
+				}
+
+				if (S_LINECOMMENT == State)
 				{
 					State = S_CODE;
-					HasComment = 1;
-					PC += 2;
 				}
-				else if (!IsBlankChar(*PC))
-				{
-					HasComment = 1;
-					PC++;
-				}
-				else
-				{
-					PC++;
-				}
+
+				PC++; //move to next line
 			}
-			else
-			{
-				PC++;
-			}
+
 		}
 
-		//line end
-		if (*PC == L'\n')
+		if (HasComment && HasCode)
 		{
-			if (HasComment && HasCode)
-			{
-				CodeCommentLines++;
-			}
-			else if (HasComment)
-			{
-				CommentLines++;
-			}
-			else if (HasCode)
-			{
-				CodeLines++;
-			}
-			else
-			{
-				BlankLines++;
-			}
-
-			if (S_LINECOMMENT == State)
-			{
-				State = S_CODE;
-			}
-
-			PC++; //move to next line
+			CodeCommentLines++;
+		}
+		else if (HasComment)
+		{
+			CommentLines++;
+		}
+		else if (HasCode)
+		{
+			CodeLines++;
+		}
+		else
+		{
+			BlankLines++;
 		}
 
 	}
