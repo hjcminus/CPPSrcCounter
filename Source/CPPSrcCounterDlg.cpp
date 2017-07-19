@@ -174,6 +174,7 @@ BOOL CCPPSrcCounterDlg::OnInitDialog()
 	m_wndStatisitc.InsertColumn(4, _T("Comment lines"), LVCFMT_LEFT, 90);
 	m_wndStatisitc.InsertColumn(5, _T("Blank lines"), LVCFMT_LEFT, 80);
 	m_wndStatisitc.InsertColumn(6, _T("Total lines"), LVCFMT_LEFT, 80);
+	m_wndStatisitc.EnableMarkSortedColumn();
 
 	//2015-08-17 Mon. added
 	HKEY hKey = NULL;
@@ -445,6 +446,7 @@ void CCPPSrcCounterDlg::UpdateStatistic(int CodeLines, int CodeCommentLines, int
 
 		int nIdx = m_wndStatisitc.GetItemCount();
 		m_wndStatisitc.InsertItem(nIdx, buffer);
+		m_wndStatisitc.SetItemData(nIdx, nIdx);
 
 		swprintf_s(buffer, L"%d", m_nSumCodeLines);
 		m_wndStatisitc.SetItemText(nIdx, 1, buffer);
@@ -489,6 +491,7 @@ void CCPPSrcCounterDlg::InsertRecord(LPCTSTR lpszFileName, int CodeLines, int Co
 	wchar_t buffer[64];
 	int nIdx = m_wndStatisitc.GetItemCount();
 	m_wndStatisitc.InsertItem(nIdx, lpszFileName);
+	m_wndStatisitc.SetItemData(nIdx, nIdx);
 
 	swprintf_s(buffer, L"%d", CodeLines);
 	m_wndStatisitc.SetItemText(nIdx, 1, buffer);
@@ -518,6 +521,7 @@ void CCPPSrcCounterDlg::InsertError(LPCTSTR lpszFileName)
 	wchar_t Buffer[1024];
 	swprintf_s(Buffer, L"[ERROR] %s", lpszFileName);
 	m_wndStatisitc.InsertItem(nIdx, Buffer);
+	m_wndStatisitc.SetItemData(nIdx, nIdx);
 
 	UpdateStatistic(0, 0, 0, 0);
 }

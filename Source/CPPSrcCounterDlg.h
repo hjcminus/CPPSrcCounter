@@ -9,6 +9,50 @@ class CBCGPListCtrlEx : public CBCGPListCtrl
 {
 public:
 
+	virtual void Sort(int iColumn, BOOL bAscending, BOOL bAdd) {
+		m_bAscending = bAscending;
+
+		__super::Sort(iColumn, bAscending, bAdd);
+
+		// need reset item data
+		for (int i = 0; i < GetItemCount(); ++i) {
+			SetItemData(i, i);
+		}
+	}
+
+	virtual int OnCompareItems(LPARAM lParam1, LPARAM lParam2, int iColumn) {
+		int item1 = (int)lParam1;
+		int item2 = (int)lParam2;
+
+		if (!m_bAscending) {
+			// keep statistic line always at bottom
+			if (item2 == GetItemCount() - 1) {
+				return 1;
+			}
+		}
+
+		CString str1 = GetItemText(item1, iColumn);
+		CString str2 = GetItemText(item2, iColumn);
+
+		if (iColumn == 0) { // file name
+			return str1.Compare(str2);
+		}
+		else { // lines
+			int i = _wtoi(str1);
+			int j = _wtoi(str2);
+
+			if (i > j) {
+				return 1;
+			}
+			else if (i < j) {
+				return -1;
+			}
+			else {
+				return 0;
+			}
+		}
+	}
+
 	virtual COLORREF OnGetCellBkColor(int nRow, int nColum)
 	{
 		if (nRow % 2)
@@ -20,6 +64,10 @@ public:
 			return GetDefaultBkColor();
 		}
 	}
+
+private:
+
+	BOOL m_bAscending;
 };
 
 // CCPPSrcCounterDlg dialog
