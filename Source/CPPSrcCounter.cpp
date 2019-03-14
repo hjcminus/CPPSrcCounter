@@ -22,7 +22,8 @@ END_MESSAGE_MAP()
 CCPPSrcCounterApp::CCPPSrcCounterApp()
 {
 	// Enable Office 2010 look (Blue theme):
-	SetVisualTheme(BCGP_VISUAL_THEME_OFFICE_2010_BLUE);
+	//SetVisualTheme(BCGP_VISUAL_THEME_OFFICE_2010_BLUE);
+	SetVisualTheme(BCGP_VISUAL_THEME_DEFAULT);
 
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance

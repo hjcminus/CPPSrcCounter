@@ -43,7 +43,8 @@ END_MESSAGE_MAP()
 // CCPPSrcCounterDlg dialog
 
 CCPPSrcCounterDlg::CCPPSrcCounterDlg(CWnd* pParent /*=NULL*/)
-: CBCGPDialog(CCPPSrcCounterDlg::IDD, pParent), mResultChain(nullptr), m_nCountPass(0)
+: CBCGPDialog(CCPPSrcCounterDlg::IDD, pParent), mResultChain(nullptr), m_nCountPass(0),
+m_FolderNameLen(0)
 {
 	m_nFileCount = m_nSumCodeLines = m_nSumCodeCommentLines = m_nSumCommentLines = m_nSumBlankLines = 0;
 
@@ -87,8 +88,8 @@ END_MESSAGE_MAP()
 
 #define IDC_LIST_STATISTIC 1
 
-const int DLG_CX = 900;
-const int DLG_CY = 540;
+const int DLG_CX = 1200;
+const int DLG_CY = 675;
 
 BOOL CCPPSrcCounterDlg::OnInitDialog()
 {
@@ -158,6 +159,7 @@ BOOL CCPPSrcCounterDlg::OnInitDialog()
 	GetClientRect(rectStatistic);
 
 	rectStatistic.InflateRect(-10, -64, -10, -10);
+	rectStatistic.top = rectCtrl.bottom + 4;
 
 	const DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_VSCROLL | LVS_REPORT;
 
@@ -168,12 +170,12 @@ BOOL CCPPSrcCounterDlg::OnInitDialog()
 		LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 
 	m_wndStatisitc.InsertColumn(0, _T("File"), LVCFMT_LEFT, 400);
-	m_wndStatisitc.InsertColumn(1, _T("Code lines"), LVCFMT_LEFT, 75);
-	m_wndStatisitc.InsertColumn(2, _T("Code/Comment lines"), LVCFMT_LEFT, 125);
-	m_wndStatisitc.InsertColumn(3, _T("Valid Code lines"), LVCFMT_LEFT, 125);
-	m_wndStatisitc.InsertColumn(4, _T("Comment lines"), LVCFMT_LEFT, 90);
-	m_wndStatisitc.InsertColumn(5, _T("Blank lines"), LVCFMT_LEFT, 80);
-	m_wndStatisitc.InsertColumn(6, _T("Total lines"), LVCFMT_LEFT, 80);
+	m_wndStatisitc.InsertColumn(1, _T("Code lines"), LVCFMT_LEFT, 75 + 30);
+	m_wndStatisitc.InsertColumn(2, _T("Code/Comment lines"), LVCFMT_LEFT, 125 + 30);
+	m_wndStatisitc.InsertColumn(3, _T("Valid Code lines"), LVCFMT_LEFT, 125 + 30);
+	m_wndStatisitc.InsertColumn(4, _T("Comment lines"), LVCFMT_LEFT, 90 + 30);
+	m_wndStatisitc.InsertColumn(5, _T("Blank lines"), LVCFMT_LEFT, 80 + 30);
+	m_wndStatisitc.InsertColumn(6, _T("Total lines"), LVCFMT_LEFT, 80 + 30);
 	m_wndStatisitc.EnableMarkSortedColumn();
 
 	//2015-08-17 Mon. added
@@ -322,15 +324,33 @@ void CCPPSrcCounterDlg::OnBnClickedButtonSelect()
 
 void CCPPSrcCounterDlg::OnBnClickedButtonCount()
 {
+	if (!m_btnCount.IsWindowEnabled()) {
+		return;
+	}
+
+	m_btnCount.EnableWindow(FALSE);
+
 	m_wndStatisitc.DeleteAllItems();
 
-	CString strSelectedFolder;
-	m_cmbFolder.GetWindowText(strSelectedFolder);
+	wchar_t buffer[1024];
+	m_cmbFolder.GetWindowText(buffer, 1024);
+	size_t len = wcslen(buffer);
+	if (!len) {
+		return;
+	}
+
+	if (buffer[len - 1] == L'/' || buffer[len - 1] == L'\\') {
+		buffer[len - 1] = L'\0';
+	}
+	CString strSelectedFolder = buffer;
 
 	if (strSelectedFolder.IsEmpty())
 	{
 		return;
 	}
+
+	m_FolderNameLen = strSelectedFolder.GetLength();
+
 	TryAppendPathToCombo(strSelectedFolder);
 
 	SrcFileList fileList;
@@ -466,6 +486,8 @@ void CCPPSrcCounterDlg::UpdateStatistic(int CodeLines, int CodeCommentLines, int
 		swprintf_s(buffer, L"%d", m_nSumCodeLines + m_nSumCodeCommentLines + m_nSumCommentLines + m_nSumBlankLines);
 		m_wndStatisitc.SetItemText(nIdx, 6, buffer);
 
+		m_btnCount.EnableWindow();
+
 	}
 }
 
@@ -490,7 +512,15 @@ void CCPPSrcCounterDlg::InsertRecord(LPCTSTR lpszFileName, int CodeLines, int Co
 {
 	wchar_t buffer[64];
 	int nIdx = m_wndStatisitc.GetItemCount();
-	m_wndStatisitc.InsertItem(nIdx, lpszFileName);
+
+	int len = (int)wcslen(lpszFileName);
+	if (len > m_FolderNameLen) {
+		m_wndStatisitc.InsertItem(nIdx, lpszFileName + m_FolderNameLen + 1);
+	}
+	else {
+		m_wndStatisitc.InsertItem(nIdx, lpszFileName);
+	}
+	
 	m_wndStatisitc.SetItemData(nIdx, nIdx);
 
 	swprintf_s(buffer, L"%d", CodeLines);

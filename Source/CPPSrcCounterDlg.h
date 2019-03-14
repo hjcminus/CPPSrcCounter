@@ -103,6 +103,7 @@ private:
 	CBCGPToolBarImages m_Images;
 
 	CBCGPListCtrlEx m_wndStatisitc;
+	int				m_FolderNameLen;
 
 	//task result
 	Mutex           mLocker;

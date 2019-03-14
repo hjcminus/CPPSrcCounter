@@ -92,6 +92,42 @@ FileType GetFileType(const wchar_t * FileName)
 	return Result;
 }
 
+int UTF8ToAnsi(const char * utf8, char *ansi, int ansiBytes) {
+	if (!utf8) {
+		if (ansi && ansiBytes > 0) { //treat as null string
+			ansi[0] = 0;
+		}
+		return 0;
+	}
+
+	int len = (int)strlen(utf8); // this is not character count, utf-8 using vary length coding, but len is sufficent for wbuf
+	wchar_t * wbuf = (wchar_t*)malloc(sizeof(wchar_t) * (len + 1));
+	if (!wbuf) {
+		ansi[0] = 0;
+		return 0;
+	}
+
+	int translen = MultiByteToWideChar(CP_UTF8, 0, utf8, len, wbuf, len + 1);
+	wbuf[translen] = 0;
+
+	int needBytes = WideCharToMultiByte(CP_ACP, 0, wbuf, translen, nullptr, 0, nullptr, nullptr); //return bytes count
+	if (!ansi) {
+		return needBytes;
+	}
+
+	if (ansiBytes < needBytes + 1) {
+		ansi[0] = 0;
+		return 0;
+	}
+
+	translen = WideCharToMultiByte(CP_ACP, 0, wbuf, translen, ansi, ansiBytes, nullptr, nullptr);
+	ansi[translen] = 0;
+
+	free(wbuf);
+
+	return translen;
+}
+
 BOOL ReadAnsiText(const wchar_t * FileName, char * &Data, int &Len)
 {
 	Data = nullptr;
@@ -151,6 +187,29 @@ BOOL ReadAnsiText(const wchar_t * FileName, char * &Data, int &Len)
 			printf("bad file size\n");
 			return FALSE;
 		}		
+	}
+	else if (FT_UTF8 == ft) { // 2017-11-01 Wed.
+		FILE * f = 0;
+		_wfopen_s(&f, FileName, L"rb");
+		if (!f)
+		{
+			printf("could not open file %s\n", FileName);
+			return FALSE;
+		}
+
+		int Size = FileSize(f);
+
+		Len = Size + 1;
+		char *utf8 = new char[Len];
+
+		fread(utf8, 1, Size, f);
+		utf8[Size] = 0;
+		fclose(f);
+
+		Data = new char[Len];
+		UTF8ToAnsi(utf8, Data, Len);
+
+		return TRUE;
 	}
 	else {
 		printf("unsupported file type\n");
