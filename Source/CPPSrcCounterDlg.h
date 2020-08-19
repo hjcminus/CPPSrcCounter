@@ -5,6 +5,7 @@
 
 #include "ParallelTask.h"
 
+#if USING_BCG
 class CBCGPListCtrlEx : public CBCGPListCtrl
 {
 public:
@@ -70,8 +71,10 @@ private:
 	BOOL m_bAscending;
 };
 
+#endif
+
 // CCPPSrcCounterDlg dialog
-class CCPPSrcCounterDlg : public CBCGPDialog
+class CCPPSrcCounterDlg : public BASE_DIALOG
 {
 public:
 
@@ -95,14 +98,17 @@ private:
 
 	HICON           m_hIcon;
 
-	CBCGPButton     m_btnSelectFolder;
-	CBCGPButton     m_btnCount;
-	CBCGPButton     m_btnExit;
-	CBCGPComboBox   m_cmbFolder;
-	CBCGPProgressCtrl m_wndProgress;
-	CBCGPToolBarImages m_Images;
+	BUTTON			m_btnSelectFolder;
+	BUTTON			m_btnCount;
+	BUTTON			m_btnExit;
+	COMBOBOX		m_cmbFolder;
+	PROGRESSCTRL	m_wndProgress;
 
-	CBCGPListCtrlEx m_wndStatisitc;
+#if USING_BCG
+	CBCGPToolBarImages m_Images;
+#endif
+
+	LISTCTRL		m_wndStatisitc;
 	int				m_FolderNameLen;
 
 	//task result

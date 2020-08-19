@@ -48,7 +48,7 @@ FileType GetFileType(const wchar_t * FileName)
 	_wfopen_s(&f, FileName, L"rb");
 	if (!f)
 	{
-		printf("could not open file %s\n", FileName);
+		wprintf_s(L"could not open file %ls\n", FileName);
 		return Result;
 	}
 
@@ -140,7 +140,7 @@ BOOL ReadAnsiText(const wchar_t * FileName, char * &Data, int &Len)
 		_wfopen_s(&f, FileName, L"rb");
 		if (!f)
 		{
-			printf("could not open file %s\n", FileName);
+			wprintf_s(L"could not open file %ls\n", FileName);
 			return FALSE;
 		}
 
@@ -160,7 +160,7 @@ BOOL ReadAnsiText(const wchar_t * FileName, char * &Data, int &Len)
 		_wfopen_s(&f, FileName, L"rb");
 		if (!f)
 		{
-			printf("could not open file %s\n", FileName);
+			wprintf_s(L"could not open file %ls\n", FileName);
 			return FALSE;
 		}
 
@@ -193,7 +193,7 @@ BOOL ReadAnsiText(const wchar_t * FileName, char * &Data, int &Len)
 		_wfopen_s(&f, FileName, L"rb");
 		if (!f)
 		{
-			printf("could not open file %s\n", FileName);
+			wprintf_s(L"could not open file %ls\n", FileName);
 			return FALSE;
 		}
 
@@ -445,7 +445,7 @@ void SrcFileList::RecursiveInit(const wchar_t *dir)
 			else
 			{
 				const wchar_t * ext = ExtractExt(fd.cFileName);
-				if (ext && (!_wcsicmp(ext, L"h") || !_wcsicmp(ext, L"hpp") || !_wcsicmp(ext, L"c") || !_wcsicmp(ext, L"cpp") || !_wcsicmp(ext, L"inl")))
+				if (ext && (!_wcsicmp(ext, L"h") || !_wcsicmp(ext, L"hpp") || !_wcsicmp(ext, L"c") || !_wcsicmp(ext, L"cpp") || !_wcsicmp(ext, L"cc") || !_wcsicmp(ext, L"inl")))
 				{
 					mFileList.AddString(fullpath);
 				}

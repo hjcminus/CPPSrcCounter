@@ -14,7 +14,7 @@
 // See CPPSrcCounter.cpp for the implementation of this class
 //
 
-class CCPPSrcCounterApp :	public CBCGPWinApp
+class CCPPSrcCounterApp :	public BASE_APP
 {
 public:
 

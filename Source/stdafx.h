@@ -45,7 +45,32 @@
 #include <afxcmn.h>			// MFC support for Windows Common Controls
 #endif // _AFX_NO_AFXCMN_SUPPORT
 
-#include <BCGCBProInc.h>			// BCGPro Control Bar
+#define USING_BCG	0
+
+#if USING_BCG
+# include <BCGCBProInc.h>			// BCGPro Control Bar
+
+# define BASE_APP		CBCGPWinApp
+# define BASE_DIALOG	CBCGPDialog
+
+# define BUTTON			CBCGPButton
+# define COMBOBOX		CBCGPComboBox
+# define PROGRESSCTRL	CBCGPProgressCtrl
+# define LISTCTRL		CBCGPListCtrlEx
+
+#else
+
+# include <afxdialogex.h>
+
+# define BASE_APP		CWinApp
+# define BASE_DIALOG	CDialogEx
+
+# define BUTTON			CButton
+# define COMBOBOX		CComboBox
+# define PROGRESSCTRL	CProgressCtrl
+# define LISTCTRL		CListCtrl
+
+#endif
 
 //our percompiled head
 

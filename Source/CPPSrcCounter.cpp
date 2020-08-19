@@ -12,8 +12,8 @@
 
 // CCPPSrcCounterApp
 
-BEGIN_MESSAGE_MAP(CCPPSrcCounterApp, CBCGPWinApp)
-	ON_COMMAND(ID_HELP, CBCGPWinApp::OnHelp)
+BEGIN_MESSAGE_MAP(CCPPSrcCounterApp, BASE_APP)
+	ON_COMMAND(ID_HELP, BASE_APP::OnHelp)
 END_MESSAGE_MAP()
 
 
@@ -23,7 +23,10 @@ CCPPSrcCounterApp::CCPPSrcCounterApp()
 {
 	// Enable Office 2010 look (Blue theme):
 	//SetVisualTheme(BCGP_VISUAL_THEME_OFFICE_2010_BLUE);
+
+#if USING_BCG
 	SetVisualTheme(BCGP_VISUAL_THEME_DEFAULT);
+#endif
 
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
@@ -44,7 +47,7 @@ BOOL CCPPSrcCounterApp::InitInstance()
 	// visual styles.  Otherwise, any window creation will fail.
 	InitCommonControls();
 
-	CBCGPWinApp::InitInstance();
+	BASE_APP::InitInstance();
 
 	CCPPSrcCounterDlg dlg;
 	m_pMainWnd = &dlg;
@@ -68,6 +71,6 @@ BOOL CCPPSrcCounterApp::InitInstance()
 
 int CCPPSrcCounterApp::ExitInstance()
 {
-	return CBCGPWinApp::ExitInstance();
+	return BASE_APP::ExitInstance();
 }
 

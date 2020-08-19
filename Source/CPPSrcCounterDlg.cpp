@@ -10,7 +10,7 @@
 
 // CAboutDlg dialog used for App About
 
-class CAboutDlg : public CBCGPDialog
+class CAboutDlg : public BASE_DIALOG
 {
 public:
 
@@ -27,30 +27,34 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-CAboutDlg::CAboutDlg() : CBCGPDialog(CAboutDlg::IDD)
+CAboutDlg::CAboutDlg() : BASE_DIALOG(CAboutDlg::IDD)
 {
+#if USING_BCG
 	EnableVisualManagerStyle(TRUE, TRUE);
+#endif
 }
 
 void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CBCGPDialog::DoDataExchange(pDX);
+	BASE_DIALOG::DoDataExchange(pDX);
 }
 
-BEGIN_MESSAGE_MAP(CAboutDlg, CBCGPDialog)
+BEGIN_MESSAGE_MAP(CAboutDlg, BASE_DIALOG)
 END_MESSAGE_MAP()
 
 // CCPPSrcCounterDlg dialog
 
 CCPPSrcCounterDlg::CCPPSrcCounterDlg(CWnd* pParent /*=NULL*/)
-: CBCGPDialog(CCPPSrcCounterDlg::IDD, pParent), mResultChain(nullptr), m_nCountPass(0),
+: BASE_DIALOG(CCPPSrcCounterDlg::IDD, pParent), mResultChain(nullptr), m_nCountPass(0),
 m_FolderNameLen(0)
 {
 	m_nFileCount = m_nSumCodeLines = m_nSumCodeCommentLines = m_nSumCommentLines = m_nSumBlankLines = 0;
 
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
+#if USING_BCG
 	EnableVisualManagerStyle(TRUE, TRUE);
+#endif
 }
 
 CCPPSrcCounterDlg::~CCPPSrcCounterDlg()
@@ -60,7 +64,7 @@ CCPPSrcCounterDlg::~CCPPSrcCounterDlg()
 
 void CCPPSrcCounterDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CBCGPDialog::DoDataExchange(pDX);
+	BASE_DIALOG::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_BUTTON_SELECT, m_btnSelectFolder);
 	DDX_Control(pDX, IDC_BUTTON_COUNT, m_btnCount);
 	DDX_Control(pDX, IDC_BUTTON_EXIT, m_btnExit);
@@ -71,7 +75,7 @@ void CCPPSrcCounterDlg::DoDataExchange(CDataExchange* pDX)
 #define WM_PARALLEL_RESULT (WM_USER + 1)
 #define MAX_FILE_PATH_COUNT  1024
 
-BEGIN_MESSAGE_MAP(CCPPSrcCounterDlg, CBCGPDialog)
+BEGIN_MESSAGE_MAP(CCPPSrcCounterDlg, BASE_DIALOG)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
@@ -93,7 +97,7 @@ const int DLG_CY = 675;
 
 BOOL CCPPSrcCounterDlg::OnInitDialog()
 {
-	CBCGPDialog::OnInitDialog();
+	BASE_DIALOG::OnInitDialog();
 
 	int nScreenCX = GetSystemMetrics(SM_CXSCREEN);
 	int nScreenCY = GetSystemMetrics(SM_CYSCREEN);
@@ -123,12 +127,14 @@ BOOL CCPPSrcCounterDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
+#if USING_BCG
 	m_Images.SetImageSize(CSize(16, 16));
 	m_Images.Load(IDB_BITMAP_BTN);
 
 	m_btnSelectFolder.SetImage(m_Images.ExtractIcon(0));
 	m_btnCount.SetImage(m_Images.ExtractIcon(2));
 	m_btnExit.SetImage(m_Images.ExtractIcon(4));
+#endif
 
 	CRect rectClient;
 	GetClientRect(rectClient);
@@ -163,7 +169,9 @@ BOOL CCPPSrcCounterDlg::OnInitDialog()
 
 	const DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_VSCROLL | LVS_REPORT;
 
+#if USING_BCG
 	m_wndStatisitc.m_bVisualManagerStyle = TRUE;
+#endif
 
 	m_wndStatisitc.Create(dwStyle, rectStatistic, this, IDC_LIST_STATISTIC);
 	m_wndStatisitc.SendMessage(LVM_SETEXTENDEDLISTVIEWSTYLE, 0,
@@ -176,7 +184,9 @@ BOOL CCPPSrcCounterDlg::OnInitDialog()
 	m_wndStatisitc.InsertColumn(4, _T("Comment lines"), LVCFMT_LEFT, 90 + 30);
 	m_wndStatisitc.InsertColumn(5, _T("Blank lines"), LVCFMT_LEFT, 80 + 30);
 	m_wndStatisitc.InsertColumn(6, _T("Total lines"), LVCFMT_LEFT, 80 + 30);
+#if USING_BCG
 	m_wndStatisitc.EnableMarkSortedColumn();
+#endif
 
 	//2015-08-17 Mon. added
 	HKEY hKey = NULL;
@@ -225,7 +235,7 @@ void CCPPSrcCounterDlg::OnSysCommand(UINT nID, LPARAM lParam)
 	}
 	else
 	{
-		CBCGPDialog::OnSysCommand(nID, lParam);
+		BASE_DIALOG::OnSysCommand(nID, lParam);
 	}
 }
 
@@ -254,7 +264,7 @@ void CCPPSrcCounterDlg::OnPaint()
 	}
 	else
 	{
-		CBCGPDialog::OnPaint();
+		BASE_DIALOG::OnPaint();
 	}
 }
 
@@ -305,14 +315,16 @@ void CCPPSrcCounterDlg::OnClose()
 
 	FreeMemory(); //force free
 
-	CBCGPDialog::OnClose();
-	CBCGPDialog::OnOK();
+	BASE_DIALOG::OnClose();
+	BASE_DIALOG::OnOK();
 }
 
 void CCPPSrcCounterDlg::OnBnClickedButtonSelect()
 {
 	CString strSelectedFolder;
 	m_cmbFolder.GetWindowText(strSelectedFolder);
+
+#if USING_BCG
 	if (theApp.GetShellManager()->BrowseForFolder(
 		strSelectedFolder, this, strSelectedFolder))
 	{
@@ -320,6 +332,15 @@ void CCPPSrcCounterDlg::OnBnClickedButtonSelect()
 		m_wndStatisitc.DeleteAllItems();
 		m_wndProgress.SetPos(0);
 	}
+#else
+	CFolderPickerDialog dlg;
+	if (dlg.DoModal() == IDOK) {
+		CString strSelectedFolder = dlg.GetPathName();
+		m_cmbFolder.SetWindowText(strSelectedFolder);
+		m_wndStatisitc.DeleteAllItems();
+		m_wndProgress.SetPos(0);
+	}
+#endif
 }
 
 void CCPPSrcCounterDlg::OnBnClickedButtonCount()
@@ -392,7 +413,7 @@ void CCPPSrcCounterDlg::OnBnClickedButtonCount()
 
 void CCPPSrcCounterDlg::OnBnClickedButtonExit()
 {
-	CBCGPDialog::OnOK();
+	BASE_DIALOG::OnOK();
 }
 
 LRESULT CCPPSrcCounterDlg::OnParallelResult(WPARAM wParam, LPARAM lParam)
